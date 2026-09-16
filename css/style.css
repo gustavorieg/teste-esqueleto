@@ -53,7 +53,10 @@ html, body {
 }
 
 .info {
+  flex-shrink: 0;
   min-height: 120px;
+  max-height: 42vh;
+  overflow-y: auto;
   padding: 12px;
   background: rgba(255, 255, 255, .04);
   border-radius: 10px;
@@ -124,8 +127,11 @@ button.active { background: #ff7a45; border-color: #ff7a45; color: #111; }
 .chips {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
+  max-height: 130px;
   margin: 8px 0 12px;
+  overflow-y: auto;
 }
 
 .chip {
