@@ -121,6 +121,118 @@ button {
 button:hover { background: rgba(255, 255, 255, .16); }
 button.active { background: #ff7a45; border-color: #ff7a45; color: #111; }
 
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+  font-size: 12px;
+  color: #ffb08a;
+  background: rgba(255, 122, 69, .14);
+  border-radius: 20px;
+}
+
+.chip-x {
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  font-size: 13px;
+  line-height: 1;
+  color: #ffb08a;
+  background: rgba(255, 255, 255, .1);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.chip-x:hover { background: rgba(255, 255, 255, .22); }
+
+.group-save {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.group-save input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 13px;
+  color: #e9eef5;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  outline: none;
+}
+
+.group-save input:focus { border-color: #ff7a45; }
+
+.groups-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.groups-head {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #9aa8bc;
+}
+
+.groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 110px;
+  overflow-y: auto;
+}
+
+.groups-empty {
+  padding: 4px 2px;
+  font-size: 12px;
+  color: #6c788b;
+}
+
+.group-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #cfd8e5;
+  background: rgba(255, 255, 255, .04);
+  border-radius: 8px;
+}
+
+.group-name {
+  flex: 1;
+  cursor: pointer;
+}
+
+.group-name:hover { color: #ffb08a; }
+
+.group-del {
+  padding: 2px 6px;
+  font-size: 12px;
+  color: #7f8ca0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.group-del:hover { color: #ff6b6b; }
+
 .list {
   flex: 1;
   min-height: 0;

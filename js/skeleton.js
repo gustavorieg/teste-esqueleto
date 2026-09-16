@@ -314,7 +314,7 @@ const SK = (() => {
 
     const coccyx = new THREE.Group();
     coccyx.name = 'Cóccix';
-    coccyx.userData = { isBone: true, name: 'Cóccix', region: 'Coluna vertebral', type: 'coccix', kind: 'bone' };
+    coccyx.userData = { isBone: true, id: 'coccyx', name: 'Cóccix', region: 'Coluna vertebral', type: 'coccix', kind: 'bone' };
     [[78.9, -8.05, 0.8, 0.42, 0.55], [78.05, -7.55, 0.58, 0.38, 0.45], [77.35, -6.95, 0.42, 0.32, 0.36], [76.85, -6.4, 0.3, 0.26, 0.28]]
       .forEach(([y, z, sx, sy, sz]) => {
         const geo = new THREE.SphereGeometry(1, 20, 14);

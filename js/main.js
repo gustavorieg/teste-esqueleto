@@ -144,18 +144,19 @@
   $('loading').hidden = true;
 
   /* ---------------- ESTADO ---------------- */
-  let selected = null;
+  const selection = new Set();      // ossos selecionados (1 ou vários)
   let hovered = null;
   let isolated = false;
   let fadeOthers = true;
+  let multiMode = false;            // checkbox "selecionar vários"; Ctrl/Cmd+clique funciona sempre
 
   function applyMaterials() {
     for (const b of SK.bones) {
       let state = 'normal';
-      if (b === selected) state = 'selected';
+      if (selection.has(b)) state = 'selected';
       else if (b === hovered) state = 'hover';
-      else if (selected && fadeOthers) state = 'faded';
-      b.visible = !(isolated && selected && b !== selected);
+      else if (selection.size && fadeOthers) state = 'faded';
+      b.visible = !(isolated && selection.size && !selection.has(b));
       b.traverse(o => {
         if (!o.isMesh) return;
         o.material = MATS[o.userData.kind][state];
@@ -164,12 +165,29 @@
     }
   }
 
-  function select(bone, focus = false) {
-    selected = bone;
-    if (!bone) isolated = false;
+  function clearSelection() {
+    selection.clear();
+    isolated = false;
     applyMaterials();
     updatePanel();
-    if (bone && focus) focusOn(bone);
+  }
+
+  function selectOnly(bone, focus = false) {
+    selection.clear();
+    if (bone) selection.add(bone);
+    else isolated = false;
+    applyMaterials();
+    updatePanel();
+    if (bone && focus) focusOnSelection();
+  }
+
+  function toggleSelect(bone) {
+    if (!bone) return;
+    if (selection.has(bone)) selection.delete(bone);
+    else selection.add(bone);
+    if (selection.size === 0) isolated = false;
+    applyMaterials();
+    updatePanel();
   }
 
   /* ---------------- CÂMERA ANIMADA ---------------- */
@@ -177,8 +195,10 @@
   function flyTo(target, camPos) {
     anim = { t: 0, fromT: controls.target.clone(), toT: target, fromP: camera.position.clone(), toP: camPos };
   }
-  function focusOn(bone) {
-    const box = new THREE.Box3().setFromObject(bone);
+  function focusOnSelection() {
+    if (!selection.size) return;
+    const box = new THREE.Box3();
+    for (const b of selection) box.union(new THREE.Box3().setFromObject(b));
     const center = box.getCenter(new THREE.Vector3());
     const dist = Math.max(box.getSize(new THREE.Vector3()).length() * 2.4, 14);
     const dir = camera.position.clone().sub(controls.target).normalize();
@@ -207,11 +227,14 @@
   renderer.domElement.addEventListener('pointerdown', e => { downPos = { x: e.clientX, y: e.clientY }; });
   renderer.domElement.addEventListener('pointerup', e => {
     if (downPos && Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) < 5) {
-      select(pick(e.clientX, e.clientY));
+      const bone = pick(e.clientX, e.clientY);
+      if (!bone) clearSelection();
+      else if (multiMode || e.ctrlKey || e.metaKey) toggleSelect(bone);
+      else selectOnly(bone, false);
     }
     downPos = null;
   });
-  renderer.domElement.addEventListener('dblclick', () => { if (selected) focusOn(selected); });
+  renderer.domElement.addEventListener('dblclick', () => focusOnSelection());
   renderer.domElement.addEventListener('pointermove', e => { moveEvt = e; });
   renderer.domElement.addEventListener('pointerleave', () => { moveEvt = null; setHover(null); });
 
@@ -251,7 +274,10 @@
       const it = document.createElement('div');
       it.className = 'item';
       it.textContent = b.userData.name;
-      it.addEventListener('click', () => select(b, true));
+      it.addEventListener('click', e => {
+        if (multiMode || e.ctrlKey || e.metaKey) toggleSelect(b);
+        else selectOnly(b, true);
+      });
       det.appendChild(it);
       items.set(b, it);
     }
@@ -260,19 +286,110 @@
   }
 
   function updatePanel() {
-    $('info-empty').hidden = !!selected;
-    $('info-bone').hidden = !selected;
-    items.forEach((it, b) => it.classList.toggle('selected', b === selected));
+    const n = selection.size;
+    $('info-empty').hidden = n > 0;
+    $('info-bone').hidden = n === 0;
+    $('info-single').hidden = n !== 1;
+    $('info-multi').hidden = n <= 1;
+    items.forEach((it, b) => it.classList.toggle('selected', selection.has(b)));
     $('btn-isolate').classList.toggle('active', isolated);
     $('btn-isolate').textContent = isolated ? 'Mostrar todos' : 'Isolar';
-    if (!selected) return;
-    const { name, region, type } = selected.userData;
-    $('info-name').textContent = name;
-    $('info-region').textContent = region;
-    $('info-desc').textContent = DESC[type] || '';
-    groups[region].open = true;
-    items.get(selected).scrollIntoView({ block: 'nearest' });
+
+    if (n === 1) {
+      const [bone] = selection;
+      const { name, region, type } = bone.userData;
+      $('info-name').textContent = name;
+      $('info-region').textContent = region;
+      $('info-desc').textContent = DESC[type] || '';
+      groups[region].open = true;
+      items.get(bone).scrollIntoView({ block: 'nearest' });
+    } else if (n > 1) {
+      $('multi-count').textContent = n;
+      const chips = $('multi-chips');
+      chips.innerHTML = '';
+      for (const b of selection) {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = b.userData.name;
+        const x = document.createElement('button');
+        x.className = 'chip-x';
+        x.textContent = '×';
+        x.title = 'Remover da seleção';
+        x.addEventListener('click', ev => { ev.stopPropagation(); toggleSelect(b); });
+        chip.appendChild(x);
+        chips.appendChild(chip);
+      }
+    }
   }
+
+  /* ---------------- GRUPOS SALVOS (localStorage) ---------------- */
+  const GROUPS_KEY = 'esqueleto-grupos-v1';
+  function loadGroups() {
+    try { return JSON.parse(localStorage.getItem(GROUPS_KEY)) || []; }
+    catch { return []; }
+  }
+  function persistGroups() {
+    try { localStorage.setItem(GROUPS_KEY, JSON.stringify(savedGroups)); }
+    catch { /* localStorage indisponível (ex: aba privada) — grupo fica só na sessão atual */ }
+  }
+  let savedGroups = loadGroups();
+  const groupsListEl = $('groups-list');
+
+  function renderGroups() {
+    groupsListEl.innerHTML = '';
+    if (!savedGroups.length) {
+      const empty = document.createElement('div');
+      empty.className = 'groups-empty';
+      empty.textContent = 'Nenhum grupo salvo. Selecione 2+ ossos e clique em "Salvar grupo".';
+      groupsListEl.appendChild(empty);
+      return;
+    }
+    for (const g of savedGroups) {
+      const row = document.createElement('div');
+      row.className = 'group-row';
+      const label = document.createElement('span');
+      label.className = 'group-name';
+      label.textContent = `${g.name} (${g.boneIds.length})`;
+      label.title = 'Clique para selecionar este grupo';
+      label.addEventListener('click', () => selectGroup(g));
+      const del = document.createElement('button');
+      del.className = 'group-del';
+      del.textContent = '🗑';
+      del.title = 'Excluir grupo';
+      del.addEventListener('click', ev => {
+        ev.stopPropagation();
+        savedGroups = savedGroups.filter(x => x.id !== g.id);
+        persistGroups();
+        renderGroups();
+      });
+      row.append(label, del);
+      groupsListEl.appendChild(row);
+    }
+  }
+
+  function selectGroup(g) {
+    selection.clear();
+    for (const id of g.boneIds) {
+      const b = SK.bones.find(x => x.userData.id === id);
+      if (b) selection.add(b);
+    }
+    isolated = false;
+    applyMaterials();
+    updatePanel();
+    focusOnSelection();
+  }
+
+  $('btn-group-save').addEventListener('click', () => {
+    if (selection.size < 2) return;
+    const input = $('group-name');
+    const name = input.value.trim() || `Grupo (${selection.size} ossos)`;
+    savedGroups.push({ id: 'g' + Date.now(), name, boneIds: [...selection].map(b => b.userData.id) });
+    persistGroups();
+    renderGroups();
+    input.value = '';
+  });
+  $('group-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-group-save').click(); });
+  renderGroups();
 
   const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   $('search').addEventListener('input', e => {
@@ -289,18 +406,19 @@
     }
   });
 
-  $('btn-focus').addEventListener('click', () => selected && focusOn(selected));
+  $('btn-focus').addEventListener('click', () => focusOnSelection());
   $('btn-isolate').addEventListener('click', () => {
     isolated = !isolated;
     applyMaterials();
     updatePanel();
-    if (isolated) focusOn(selected);
+    if (isolated) focusOnSelection();
   });
-  $('btn-clear').addEventListener('click', () => select(null));
+  $('btn-clear').addEventListener('click', () => clearSelection());
   $('btn-reset').addEventListener('click', () => flyTo(HOME_TARGET.clone(), HOME_POS.clone()));
   $('chk-fade').addEventListener('change', e => { fadeOthers = e.target.checked; applyMaterials(); });
   $('chk-rotate').addEventListener('change', e => { controls.autoRotate = e.target.checked; });
-  addEventListener('keydown', e => { if (e.key === 'Escape') select(null); });
+  $('chk-multi').addEventListener('change', e => { multiMode = e.target.checked; });
+  addEventListener('keydown', e => { if (e.key === 'Escape') clearSelection(); });
 
   addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;

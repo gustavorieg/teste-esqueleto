@@ -21,9 +21,20 @@
         Clique em um osso no modelo ou escolha na lista.
       </div>
       <div class="info-bone" id="info-bone" hidden>
-        <span class="region" id="info-region"></span>
-        <h2 id="info-name"></h2>
-        <p id="info-desc"></p>
+        <div id="info-single">
+          <span class="region" id="info-region"></span>
+          <h2 id="info-name"></h2>
+          <p id="info-desc"></p>
+        </div>
+        <div id="info-multi" hidden>
+          <span class="region">Seleção múltipla</span>
+          <h2><span id="multi-count"></span> ossos selecionados</h2>
+          <div class="chips" id="multi-chips"></div>
+          <div class="group-save">
+            <input type="text" id="group-name" placeholder="Nome do grupo...">
+            <button id="btn-group-save">Salvar grupo</button>
+          </div>
+        </div>
         <div class="info-actions">
           <button id="btn-focus">Focar</button>
           <button id="btn-isolate">Isolar</button>
@@ -35,7 +46,13 @@
     <section class="controls">
       <label><input type="checkbox" id="chk-fade" checked> Esmaecer os outros ossos</label>
       <label><input type="checkbox" id="chk-rotate"> Girar automaticamente</label>
+      <label><input type="checkbox" id="chk-multi"> Selecionar vários ossos (ou Ctrl/Cmd+clique)</label>
       <button id="btn-reset">Resetar câmera</button>
+    </section>
+
+    <section class="groups-section">
+      <div class="groups-head">Grupos salvos</div>
+      <div id="groups-list" class="groups-list"></div>
     </section>
 
     <section class="list">
