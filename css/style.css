@@ -338,6 +338,8 @@ button.active { background: #ff7a45; border-color: #ff7a45; color: #111; }
   backdrop-filter: blur(2px);
 }
 
+.modal-overlay[hidden] { display: none; }
+
 .modal {
   position: relative;
   width: 100%;
