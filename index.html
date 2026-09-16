@@ -67,12 +67,26 @@
 
   <footer class="hint">
     Arrastar: girar 360° · Scroll: zoom · Botão direito: mover
-    <div class="credit">
-      Modelo 3D: <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/" target="_blank" rel="noopener">BodyParts3D</a>,
-      © The Database Center for Life Science —
-      <a href="https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en" target="_blank" rel="noopener">CC BY-SA 2.1 JP</a>
-    </div>
+    <button class="ref-btn" id="btn-references" type="button">Referências</button>
   </footer>
+
+  <div class="modal-overlay" id="ref-overlay" hidden>
+    <div class="modal" role="dialog" aria-labelledby="ref-title">
+      <button class="modal-close" id="ref-close" type="button" aria-label="Fechar">×</button>
+      <h3 id="ref-title">Referências</h3>
+      <p>
+        Modelo 3D: <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/" target="_blank" rel="noopener">BodyParts3D</a>,
+        © The Database Center for Life Science.
+      </p>
+      <p>
+        Licenciado sob
+        <a href="https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en" target="_blank" rel="noopener">CC BY-SA 2.1 JP</a>.
+      </p>
+      <p>
+        Biblioteca 3D: <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a>.
+      </p>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>

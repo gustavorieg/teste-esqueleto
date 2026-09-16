@@ -418,7 +418,18 @@
   $('chk-fade').addEventListener('change', e => { fadeOthers = e.target.checked; applyMaterials(); });
   $('chk-rotate').addEventListener('change', e => { controls.autoRotate = e.target.checked; });
   $('chk-multi').addEventListener('change', e => { multiMode = e.target.checked; });
-  addEventListener('keydown', e => { if (e.key === 'Escape') clearSelection(); });
+  const refOverlay = $('ref-overlay');
+  const openRefs = () => { refOverlay.hidden = false; };
+  const closeRefs = () => { refOverlay.hidden = true; };
+  $('btn-references').addEventListener('click', openRefs);
+  $('ref-close').addEventListener('click', closeRefs);
+  refOverlay.addEventListener('click', e => { if (e.target === refOverlay) closeRefs(); });
+
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!refOverlay.hidden) closeRefs();
+    else clearSelection();
+  });
 
   addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
